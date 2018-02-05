@@ -17,7 +17,7 @@ class fund():
         self.last_updated_date = None
         self.last_updated_by = ""
 
-class net():
+class netItem():
     def __init__(self, fund_code, date, current, total):
         self.fund_code = fund_code
         self.date = date
