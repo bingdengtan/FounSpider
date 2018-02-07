@@ -1,13 +1,17 @@
 import re
 import time
 import socket
+import traceback
+
 from DB import DB
 from datetime import datetime
 from urllib import request
+from lxml import etree
 
 from Core import common
 from Items import fund as fundItem;
 from Items import netItem as netItem;
+from Items import fund_stock as stockItem;
 
 class company():
     def __init__(self, item):
@@ -39,6 +43,90 @@ class company():
             _fundCtrl = fund(fundItem(self.item.code, item[0], item[1]))
             _fundCtrl.insert()
 
+class stock():
+    def __init__(self):
+        self.col_name = "fund_stock"
+        self.db = DB(self.col_name)
+
+    def fetchByFundCodeAndYear(self, fund_code, year):
+        time.sleep(1)
+        url = "http://fund.eastmoney.com/f10/FundArchivesDatas.aspx?type=jjcc&code=%s&topline=50&year=%s&month=" % (fund_code, str(year))
+        try:
+            response = request.urlopen(url)
+            html = response.read();
+            content = html.decode('utf-8')
+            content = re.findall(r'content:"(.*?)"', content)
+            quarters = etree.HTML(content[0]).xpath("//div[@class='box']")
+
+            print("%s Fetch and insert fund stock, Fund code: %s, Year: %s" % (common.getCurrentDateTimeString(), fund_code, str(year)))
+            for quarter in quarters:
+                tree = etree.HTML(etree.tostring(quarter).decode('utf-8'))
+                dates = tree.xpath("//font[@class='px12']/text()")
+                stock_codes = tree.xpath("//table/tbody/tr/td[2]/a/text()")
+                stock_names = tree.xpath("//table/tbody/tr/td[3]/a/text()")
+                stock_weights = tree.xpath("//table/tbody/tr/td[last()-2]/text()")
+                stock_numbers = tree.xpath("//table/tbody/tr/td[last()-1]/text()")
+                stock_totals = tree.xpath("//table/tbody/tr/td[last()]/text()")
+
+                month = int(str(dates[0]).split("-")[1])
+                for index , item in enumerate(stock_codes):
+                    try:
+                        weight = float(str(stock_weights[index]).replace("%",""))
+                    except:
+                        weight = stock_weights[index]
+
+                    try:
+                        number = float(str(stock_numbers[index]).replace(",",""))
+                    except:
+                        number = stock_numbers[index]
+
+                    try:
+                        total = float(str(stock_totals[index]).replace(",",""))
+                    except:
+                        total = stock_totals[index]
+
+                    _stockItem = stockItem(fund_code, stock_codes[index], stock_names[index], year, month, weight, number, total)
+                    self.insertStock(_stockItem)
+
+
+        except:
+            traceback.print_exc()
+            print("FetchByFundCodeAndYear catch exception, fund code: %s" % (fund_code))
+            pass
+
+    def insertStock(self, dict):
+        if self.exist(dict) == False:
+            dict.creation_date = datetime.now()
+            dict.last_updated_date = datetime.now()
+            self.db.insert(common.props(dict))
+
+    def exist(self,dict):
+        items = self.db.find({"fund_code":dict.fund_code, "stock_code": dict.stock_code, "year": dict.year, "month": dict.month})
+        return items.count() > 0
+
+    def fetchByFundCode(self, fund_code):
+        years = self.fetchStockYearsByFundCode(fund_code)
+        if len(years) > 0:
+            for year in years:
+                self.fetchByFundCodeAndYear(fund_code, int(year))
+
+    def fetchStockYearsByFundCode(self, fund_code):
+        nextYear = datetime.now().year + 1
+        url = "http://fund.eastmoney.com/f10/FundArchivesDatas.aspx?type=jjcc&code=%s&topline=10&year=%s&month=" % (fund_code, str(nextYear))
+        try:
+            response = request.urlopen(url)
+            html = response.read();
+            content = html.decode('utf-8')
+            years = re.findall(r'arryear:\[(.*?)\]', content)
+            if years[0] == "":
+                return []
+            else:
+                return str(years[0]).split(",")
+        except:
+            traceback.print_exc()
+            print("FetchStockYearsByFundCode catch exception, fund code: %s" % (fund_code))
+            pass
+
 class fund():
     def __init__(self, item):
         self.col_name = "fund_fund"
@@ -69,7 +157,7 @@ class fund():
         try:
             response = request.urlopen(req)
             html = response.read();
-            content = html.decode('gb2312')
+            content = html.decode('gb2312', 'ignore')
             nets = re.findall(
                 r'<td style="text-align: center;">(.*?)</td>\r\n<td style="text-align: center;">(.*?)</td>\r\n<td style="text-align: center;" class="end">(.*?)</td>',
                 content)
@@ -84,22 +172,10 @@ class fund():
             print("Catch timeout, and will try again after 5 seconds")
             time.sleep(5)
             self.insertNet(item, date_from, date_to)
-
-    def insertAllNet(self, date_from, date_to):
-        lngIndex = 0
-        funds = self.find({})
-        for item in funds:
-            try:
-                lngIndex = lngIndex + 1
-                print("%s Check and insert fund net: %s-(%s) %s/%s" % (common.getCurrentDateTimeString(), item["name"], item["code"], str(lngIndex), str(funds.count())))
-                self.insertNet(item, date_from, date_to)
-            except:
-                time.sleep(5)
-                self.insertNet(item, date_from, date_to)
-        funds.close()
-
-    def findNet(self, item, date):
-        return;
+        except:
+            print(url)
+            traceback.print_exc()
+            pass
 
 class net():
     def __init__(self, net):

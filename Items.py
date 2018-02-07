@@ -23,3 +23,23 @@ class netItem():
         self.date = date
         self.current = current
         self.total = total
+        self.creation_date = None
+        self.creation_by = ''
+        self.last_updated_date = None
+        self.last_updated_by = ""
+
+class fund_stock():
+    def __init__(self, fund_code, stock_code, stock_name, year, month, weight, number, total):
+        self.fund_code = fund_code
+        self.stock_code = stock_code
+        self.stock_name = stock_name
+        self.year = year
+        self.month = month
+        self.weight = weight
+        self.number = number
+        self.total = total
+
+        self.creation_date = None
+        self.creation_by = ''
+        self.last_updated_date = None
+        self.last_updated_by = ""
