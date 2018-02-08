@@ -16,9 +16,9 @@ class Spider():
         self.url = "http://fund.eastmoney.com/company/default.html"
 
     def start(self):
-        #self.fetchCompanies()
+        self.fetchCompanies()
         self.fetchFundsStock()
-        #self.fetchFundsNets()
+        self.fetchFundsNets()
 
     def fetchCompanies(self):
         try:
@@ -57,7 +57,6 @@ class Spider():
                 time.sleep(5)
                 _stockCtrl.fetchByFundCode(item["code"])
         funds.close()
-
 
     def fetchFundsNets(self):
         _fundCtrl = fundCtrl({})

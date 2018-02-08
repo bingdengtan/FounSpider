@@ -56,8 +56,11 @@ class stock():
             html = response.read();
             content = html.decode('utf-8')
             content = re.findall(r'content:"(.*?)"', content)
-            quarters = etree.HTML(content[0]).xpath("//div[@class='box']")
 
+            if content[0] == "":
+                return
+
+            quarters = etree.HTML(content[0]).xpath("//div[@class='box']")
             print("%s Fetch and insert fund stock, Fund code: %s, Year: %s" % (common.getCurrentDateTimeString(), fund_code, str(year)))
             for quarter in quarters:
                 tree = etree.HTML(etree.tostring(quarter).decode('utf-8'))
@@ -87,8 +90,6 @@ class stock():
 
                     _stockItem = stockItem(fund_code, stock_codes[index], stock_names[index], year, month, weight, number, total)
                     self.insertStock(_stockItem)
-
-
         except:
             traceback.print_exc()
             print("FetchByFundCodeAndYear catch exception, fund code: %s" % (fund_code))
@@ -106,6 +107,7 @@ class stock():
 
     def fetchByFundCode(self, fund_code):
         years = self.fetchStockYearsByFundCode(fund_code)
+
         if len(years) > 0:
             for year in years:
                 self.fetchByFundCodeAndYear(fund_code, int(year))
