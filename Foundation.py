@@ -26,7 +26,6 @@ class company():
             self.db.insert(common.props(self.item))
         self.insertFounds()
 
-
     def exist(self,dic):
         items = self.db.find(dic)
         return items.count() > 0
@@ -139,6 +138,7 @@ class fund():
         if self.exist({"code": self.item.code}) == False:
             self.item.creation_date = datetime.now()
             self.item.last_updated_date = datetime.now()
+            self.item.name_ping_yin = common.getFirstCharAsPingYin(self.item.name)
             self.db.insert(common.props(self.item))
 
     def exist(self,dic):

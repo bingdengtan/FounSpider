@@ -17,8 +17,8 @@ class Spider():
 
     def start(self):
         self.fetchCompanies()
-        self.fetchFundsStock()
-        self.fetchFundsNets()
+        #self.fetchFundsStock()
+        #self.fetchFundsNets()
 
     def fetchCompanies(self):
         try:
