@@ -187,6 +187,8 @@ class net():
 
     def insert(self):
         if self.exist() == False:
+            self.net.creation_date = datetime.now()
+            self.net.last_updated_date = datetime.now()
             self.db.insert(common.props(self.net))
 
     def exist(self):
