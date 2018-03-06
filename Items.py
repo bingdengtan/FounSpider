@@ -21,6 +21,16 @@ class fund():
         self.last_updated_date = None
         self.last_updated_by = ""
 
+class stock():
+    def __init__(self, code, name):
+        self.code = code
+        self.name = name
+        self.name_ping_yin = common.getFirstCharAsPingYin(self.name)
+        self.creation_date = None
+        self.creation_by = ''
+        self.last_updated_date = None
+        self.last_updated_by = ""
+
 class netItem():
     def __init__(self, fund_code, date, current, total):
         self.fund_code = fund_code

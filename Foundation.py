@@ -42,7 +42,7 @@ class company():
             _fundCtrl = fund(fundItem(self.item.code, item[0], item[1]))
             _fundCtrl.insert()
 
-class stock():
+class fundStock():
     def __init__(self):
         self.col_name = "fund_stock"
         self.db = DB(self.col_name)
@@ -178,6 +178,25 @@ class fund():
             print(url)
             traceback.print_exc()
             pass
+
+class stock():
+    def __init__(self, item):
+        self.col_name = "stock"
+        self.item = item
+        self.db = DB(self.col_name)
+
+    def insert(self):
+        if self.exist({"code": self.item.code}) == False:
+            self.item.creation_date = datetime.now()
+            self.item.last_updated_date = datetime.now()
+            self.db.insert(common.props(self.item))
+
+    def exist(self,dic):
+        items = self.db.find(dic)
+        return items.count() > 0
+
+    def find(self, dic):
+        return self.db.find(dic).sort([("code",1)])
 
 class net():
     def __init__(self, net):
